@@ -1,0 +1,32 @@
+!!!
+%html
+  %head
+    %title Hotel Management on Rails
+    = stylesheet_link_tag "960/reset"
+    = stylesheet_link_tag "960/text"
+    = stylesheet_link_tag "960/960"
+    = stylesheet_link_tag "style"
+    = stylesheet_link_tag "custom-theme/jquery-ui-1.8.6.custom.css"
+    = stylesheet_link_tag "jquery.cluetip"
+
+    = javascript_include_tag "jquery-1.4.4.min"
+    = javascript_include_tag "jquery-ui-1.8.6.custom.min"
+    = javascript_include_tag "jquery.validate.min"
+    = javascript_include_tag "rails"
+    = javascript_include_tag "jquery.hoverIntent"
+    = javascript_include_tag "jquery.cluetip"
+    = javascript_include_tag "FusionCharts"
+    = csrf_meta_tag
+  %body
+    .notice
+      = render :partial => "shared/notice"
+    = render :partial => "shared/header"
+    %div{:style => "width:100%"}
+      = yield
+    .clear
+    :javascript
+      $('.close_alert').click(function () {
+        $(this).parent().slideUp('slow');
+        return false;
+      });
+

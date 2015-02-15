@@ -1,0 +1,292 @@
+.block-border
+  .block-content{:style => "overflow:auto;padding-top:5px;background:#aaa;"}
+    .block-controls
+      =will_paginate @rooms 
+    #panel-frame{:style => "width:49%"}
+      .panel
+        .head
+          %a{:href=> "#",:class => "close"} close
+        .data
+    .left.no-margin{:style => "width:51%"}
+      =render :partial => "shared/roomtable"
+
+    .right{:style => "width:50%;"}
+      %h3 Welcome to Hotel Management Home Page
+      %hr
+      =render :partial => "shared/charts"
+     
+
+
+#service_dialog{ :title => "Add Service",:style => "display:none"}
+  =render :partial => "service_items/service_item_form"
+
+#payment_dialog{:title => "Add Payments", :style => "display:none"}
+  =render :partial => "payments/payment_form"
+
+#checkout_dialog{:title => "Checkout", :style => "display:none;"}
+  #pending_amount_div
+  #checkout_form_div
+
+#splitroom_dialog{:title => "Split Room as New Checkin", :style => "display:none;"}
+  Do you want to split Room -
+  %span{:id => "split_room_number"}
+  into separate checkin?
+  =form_tag split_room_url,:id => :splitroom_form, :method => :put do
+    =hidden_field_tag :splitroom_line_item_id
+
+#delete_room_service_dialog{:title => "Delete Room Service", :style => "display:none;"}
+  Do you want to delete Room Service
+  %span{:id => "delete_room_service"}
+  Item?
+  =form_tag delete_service_url, :id => "delete_service_form", :method => :delete, :remote => true do
+    =hidden_field_tag "delete_service_item_id"
+
+#delete_payment_dialog{:title => "Delete Payment", :style => "display:none;"}
+  Do you want to delete Payment
+  %span{:id => "delete_payment"}
+  Item?
+  =form_tag delete_payment_url, :id => "delete_payment_form", :method => :delete, :remote => true do
+    =hidden_field_tag "delete_payment_id"
+
+#shiftroom_dialog{:title => "Shift Room",:style => "display:none"}
+  =form_tag shift_room_url, :id => :shiftroom_form, :method => :put do
+    =hidden_field_tag :shiftroom_room_id_checkin_id
+    =label_tag "Shift to:"
+    =select_tag :shift_room_id, options_from_collection_for_select(@rooms_available,:id,:roomtype)
+    %br
+    =label_tag "Rate"
+    =text_field_tag :rate
+    %br
+    =label_tag "tax"
+    =text_field_tag :tax
+    \%
+#edit_line_item_dialog{:title => "Edit Checkin",:style => "display:none"}
+  #line_item_form
+
+#block_room_dialog{:title => "Block Room?",:style => "display:none"}
+  Do you want to block Room -
+  %span{:id => "block_room_number"}
+  &nbsp;?
+  =form_tag block_room_url,:id => :block_room_form, :method => :put do
+    =label_tag "Specify Reason"
+    =select_tag "reason",options_for_select(["Maintenance","Occupied by Staff"])
+    =hidden_field_tag :block_room_id
+#unblock_room_dialog{:title => "Unblock Room?",:style => "display:none"}
+  Do you want to unblock Room -
+  %span{:id => "unblock_room_number"}
+  &nbsp;?
+  =form_tag unblock_room_url,:id => :unblock_room_form, :method => :put do
+    =hidden_field_tag :unblock_room_id
+
+
+:javascript
+  $('#service_form').bind("ajax:loading",  function(){
+    $('.add_service').after('<div id="loading"><img style = "float:right;margin:3px;" src="/images/smallloading.gif"/></div>')
+  });
+  $('#payment_form').bind("ajax:loading",  function(){
+    $('.add_payment').after('<div id="loading"><img style = "float:right;margin:3px;" src="/images/smallloading.gif"/></div>')
+  });
+  $('#delete_service_form').bind("ajax:loading",  function(){
+    $('.add_service').after('<div id="loading"><img style = "float:right;margin:3px;" src="/images/smallloading.gif"/></div>')
+  });
+  $('#edit_line_item_form').bind("ajax:loading",  function(){
+    $('#line_items').html('<div id="loading"><img style = "float:right;margin:3px;" src="/images/smallloading.gif"/></div>')
+  });
+
+  $(document).ready(function() {
+
+    $('.shiftroom_link').click(function(){
+      $('#shiftroom_dialog').dialog('open');
+      $('#shiftroom_room_id_checkin_id').val($(this).parents('tr').attr('id'));
+      return false;
+     });
+
+    $('.blockroom_link').click(function(){
+      $('#block_room_dialog').dialog('open');
+      $('#block_room_id').val($(this).attr('id').split('-')[1]);
+      $('#block_room_number').html($(this).parents('.block').find('th[scope=row]').text());
+      return false;
+     });
+
+    $('.unblockroom_link').click(function(){
+      $('#unblock_room_dialog').dialog('open');
+      $('#unblock_room_id').val($(this).attr('id').split('-')[1]);
+      $('#unblock_room_number').html($(this).parents('.block').find('th[scope=row]').text());
+      return false;
+     });
+
+    $('.checkedin').click(function(){
+
+      var id= $(this).parents('tr').attr('id');
+      myarr = id.split('-');
+      $('#service_item_room_id').val(myarr[1]);
+      var data_id= $(".data").attr('id');
+      if(data_id == ''){
+        $('.data').attr('id','data' + id);
+      }
+      var panel= $('.panel');
+      var panel_width=$('.panel').css('left');
+
+      if(data_id == 'data' + id){
+        panel.animate({left: parseInt(panel.css('left'),0) == 0 ? +panel.outerWidth() : 0});
+      }
+      else{
+        $('.data').attr('id','data' + id);
+        if(panel_width =='465px'){
+
+        }
+        else{
+          panel.animate({left: parseInt(panel.css('left'),0) == 0 ? +panel.outerWidth() : 0});
+        }
+        $.ajax({
+          beforeSend: function(){$('.data').html('<div style="margin:100px";><img src="/images/smallloading.gif"/>&nbsp;<b>Loading..</b></div>');},
+          url: '/checkins/' + myarr[3]
+        });
+      }
+      return false;
+    });
+
+    $('.close').click(function(){
+      var panel= $('.panel');
+      panel.animate({left: parseInt(panel.css('left'),0) == 0 ? +panel.outerWidth() : 0});
+      return false;
+    });
+  });
+     
+  
+  $('#checkout_dialog').dialog({
+    autoOpen: false,
+    width: 400,
+    buttons: {
+      "Save": function() { 
+        $(this).dialog("close"); 
+        $('#checkout_dialog form').submit();
+        window.open('/checkout/' + $('#service_item_checkin_id').val(),'Check Out', 'height=400,width=400');
+        window.location="/home/index";
+      }, 
+      "Cancel": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+  $('#service_dialog').dialog({
+    autoOpen: false,
+    width: 400,
+    buttons: {
+      "Save": function() { 
+        $(this).dialog("close"); 
+        $('#service_form').submit();
+      }, 
+      "Cancel": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+  $('#payment_dialog').dialog({
+    autoOpen: false,
+    width: 400,
+    buttons: {
+      "Save": function() { 
+        $(this).dialog("close"); 
+        $('#payment_form').submit();
+      }, 
+      "Cancel": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+
+  $('#splitroom_dialog').dialog({
+    autoOpen: false,
+    width: 400,
+    buttons: {
+      "Yes": function() { 
+        $(this).dialog("close"); 
+        $('#splitroom_form').submit();
+      }, 
+      "No": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+  $('#delete_room_service_dialog').dialog({
+    autoOpen: false,
+    width: 400,
+    buttons: {
+      "Yes": function() { 
+        $(this).dialog("close"); 
+        $('#delete_service_form').submit();
+      }, 
+      "No": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+  $('#shiftroom_dialog').dialog({
+    autoOpen: false,
+    width: 400,
+    buttons: {
+      "Shift": function() { 
+        $(this).dialog("close"); 
+        $('#shiftroom_form').submit();
+      }, 
+      "Cancel": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+
+  $('#delete_payment_dialog').dialog({
+    autoOpen: false,
+    width: 400,
+    buttons: {
+      "Yes": function() { 
+        $(this).dialog("close"); 
+        $('#delete_payment_form').submit();
+      }, 
+      "No": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+  $('#edit_line_item_dialog').dialog({
+    autoOpen: false,
+    width: 450,
+    buttons: {
+      "Save": function() { 
+        $(this).dialog("close"); 
+        $('#edit_line_item_form').submit();
+      }, 
+      "Cancel": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+  $('#block_room_dialog').dialog({
+    autoOpen: false,
+    width: 450,
+    buttons: {
+      "Save": function() { 
+        $(this).dialog("close"); 
+        $('#block_room_form').submit();
+      }, 
+      "Cancel": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+  $('#unblock_room_dialog').dialog({
+    autoOpen: false,
+    width: 450,
+    buttons: {
+      "Save": function() { 
+        $(this).dialog("close"); 
+        $('#unblock_room_form').submit();
+      }, 
+      "Cancel": function() { 
+        $(this).dialog("close"); 
+      } 
+    }
+  });
+
+

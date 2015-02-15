@@ -1,0 +1,46 @@
+.container_16
+  %h2 Listing checkins
+  .block-border
+    .block-content
+      .block-controls
+        =will_paginate @rooms 
+
+      %table.total
+        %tr
+          %th Invoice Number
+          %th Company
+          %th Guest
+          %th Creation Date
+          %th Updation Date
+          %th Total Charges
+          %th Total Payment
+          %th Pending
+          %th Status
+          %th Checkout
+        - @checkins.each do |checkin|
+          %tr
+            %td
+              =checkin.id
+            %td
+              =checkin.company.name
+            %td
+              =checkin.guests[0].name
+            %td
+              =checkin.created_at.in_time_zone(APP_CONFIG['hotel_time_zone'])
+            %td
+              =checkin.updated_at.in_time_zone(APP_CONFIG['hotel_time_zone'])
+            %td
+              =checkin.total_charges
+            %td
+              =checkin.payments.sum(:amount)
+            %td
+              =checkin.pending_balance
+            %td
+              =checkin.status
+            %td
+              =link_to_function "View", "window.open('/checkout/#{checkin.id.to_s}','Check Out', 'height=400,width=400');"
+
+              
+
+       
+

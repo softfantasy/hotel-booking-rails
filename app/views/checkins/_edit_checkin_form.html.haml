@@ -1,0 +1,22 @@
+=form_for @checkin, :remote => true  do |f|
+  .field
+    #pending_reason_div{ :style => "display:none" }
+      =f.label :pending_reason
+      =select_tag "select_description",options_for_select(["Bill to Company","Trial Checkin","Discount","Other"])
+      #description_for_pending{ :style => "display:none" }
+        =f.text_area :description
+    =f.hidden_field :status
+    -if @checkin.company_id == 1
+      =f.hidden_field :bill_to_owner_id,{:value =>  @checkin.guests[0].id.to_s}
+      =f.hidden_field :bill_to_owner_type,{:value =>  "Guest"}
+    -else
+      =f.hidden_field :bill_to_owner_id,{:value =>  @checkin.company.id.to_s}
+      =f.hidden_field :bill_to_owner_type,{:value =>  "Company"}
+
+:javascript    
+  $('#select_description').change(function(){
+    if($(this).find('option:selected').text() == "Other"){
+      $('#description_for_pending').show();
+    }
+  });
+

@@ -1,0 +1,30 @@
+.checkout
+  %ul
+    %li 
+      %b Bill to:
+    -if @checkin.company_id == 1
+      - if @checkin.guests.length < 2
+        %li= @checkin.guests[0].name
+      - else
+        %li= select_tag :bill_to, options_for_select(@checkin.guests.collect{|g| g.name})
+    -else
+      %li= select_tag :bill_to, options_for_select(@checkin.guests.collect{|g| [g.name, "Guest-#{g.id}"]}.unshift([@checkin.company.name, "Company-#{@checkin.company.id}"]))
+  #line_items
+    -@tamount = 0
+    =render :partial => "shared/line_items"
+
+
+  %hr   
+  #othercharges
+    =render :partial => "shared/other_charges"
+  %hr      
+  #payments
+    =render :partial => "shared/payments"
+  %hr
+  #totaldiv
+    =render :partial => "shared/totaldiv"
+
+
+
+
+  

@@ -1,0 +1,16 @@
+.container_16
+  %h3 Listing rooms
+  .block-border
+    .block-content
+
+      %table.roomlist{:cellspacing => 0}
+        - @rooms.each do |room|
+          %tr
+            %th{:scope => 'row'}= room.number
+            %td
+              = room.room_type.name
+              = link_to 'Show', room
+              = link_to 'Edit', edit_room_path(room)
+              = link_to 'Destroy', room, :confirm => 'Are you sure?', :method => :delete
+    %br
+    = link_to 'New Room', new_room_path
